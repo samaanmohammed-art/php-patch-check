@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Is my PHP version patched?</title>
+<title>Is my PHP version patched? Fixed versions for CVE-2026-109618 and PHP 8.2 end of life</title>
+<link rel="canonical" href="https://samaanmohammed-art.github.io/php-patch-check/">
+<meta property="og:title" content="Is my PHP version patched?">
+<meta property="og:description" content="Fixed PHP versions from 21 October 2026 (8.5.12, 8.4.27, 8.3.36, 8.2.35) and end-of-life dates. Type a version; nothing is sent anywhere.">
+<meta property="og:type" content="website">
 <meta name="description" content="Type a PHP version number and compare it with the 21 October 2026 PHP security releases and the end-of-life dates. Runs in your browser, sends nothing.">
 <style>
   :root {
@@ -89,6 +93,19 @@
     <p class="small">It only compares the number you type. Linux distribution packages (Ubuntu, Debian, Red Hat and others) can include a security fix without changing the version number, so a lower number does not always mean the fix is missing: check your distribution's security notice. After an update, the running PHP process (PHP-FPM, Apache) has to be restarted before it uses the new version. This is not security advice.</p>
   </section>
 </main>
+<section style="max-width:42rem;margin:1.5rem auto;padding:0 1rem;font:1rem/1.6 system-ui,sans-serif;color:#14213d">
+<h2 style="font-size:1.25rem">Which PHP versions fix CVE-2026-109618 and CVE-2026-109619?</h2>
+<p>PHP published security releases on 21 October 2026: 8.5.12, 8.4.27, 8.3.36 and 8.2.35. PHP 8.1 and older received no official fixed release. Source: the php.net release feed and the OSV database, read on 22 October 2026.</p>
+<table style="border-collapse:collapse;width:100%;font-size:0.95rem"><caption style="text-align:left;font-weight:600;padding:0.4rem 0">Fixed versions and end of life (endoflife.date, 22 Oct 2026)</caption>
+<thead><tr><th style="text-align:left;border-bottom:1px solid #cfd8ea;padding:0.3rem">Branch</th><th style="text-align:left;border-bottom:1px solid #cfd8ea;padding:0.3rem">Fixed in</th><th style="text-align:left;border-bottom:1px solid #cfd8ea;padding:0.3rem">Support ends</th></tr></thead>
+<tbody><tr><td style="padding:0.3rem">8.5</td><td>8.5.12</td><td>2029-12-31</td></tr><tr><td style="padding:0.3rem">8.4</td><td>8.4.27</td><td>2028-12-31</td></tr><tr><td style="padding:0.3rem">8.3</td><td>8.3.36</td><td>2027-12-31</td></tr><tr><td style="padding:0.3rem">8.2</td><td>8.2.35</td><td>2026-12-31</td></tr><tr><td style="padding:0.3rem">8.1 and older</td><td>no official fix</td><td>8.1 ended 2025-12-31</td></tr></tbody></table>
+<h2 style="font-size:1.25rem">When does PHP 8.2 reach end of life?</h2>
+<p>31 December 2026, according to endoflife.date and php.net.</p>
+<h2 style="font-size:1.25rem">Does the version number tell the whole story?</h2>
+<p>Not always. Linux distribution packages (Debian, Ubuntu, RHEL and others) can include a fix without changing the version number, and the command-line <code>php -v</code> can differ from the PHP that serves your site (PHP-FPM must be restarted after an update). Check your distribution's security notice and your host's advice. This page is not security or legal advice.</p>
+<p>Also see: <a href="runtime/">Is my runtime still supported? (Python, Node.js, .NET, PostgreSQL, MySQL, WordPress)</a></p>
+</section>
+
 <p style="max-width:42rem;margin:1.5rem auto;padding:0 1rem;font:0.95rem/1.5 system-ui,sans-serif;color:#3d4a63">Managing several client sites? <a href="https://samaanmohammed.gumroad.com/l/xvsyxe">The PHP Patch and End-of-Life Kit</a> ($19) is a site list that flags unpatched versions, with three client emails and a host checklist. This page is free and makes no network calls; it only compares the number you type.</p>
 
 
