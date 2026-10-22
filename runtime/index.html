@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is my runtime still supported?</title>
+<meta name="description" content="Pick PHP, Python, Node.js, .NET, PostgreSQL, MySQL or WordPress, type a version, and see its end-of-life date from endoflife.date. Runs in your browser, sends nothing.">
+<style>
+  :root {
+    --bg: #fbfbf9; --surface: #ffffff; --ink: #16181d; --muted: #4a4f5a; --line: #d9dbe0;
+    --accent: #1f4fd1; --ok-bg: #e7f5ec; --ok-ink: #0d5a2c; --warn-bg: #fff4e0; --warn-ink: #7a4300;
+    --bad-bg: #fde9e9; --bad-ink: #8a1414; --info-bg: #eef1f7; --info-ink: #23324d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121418; --surface: #1b1e24; --ink: #eceef2; --muted: #b3b8c3; --line: #343842;
+      --accent: #8fb0ff; --ok-bg: #11301e; --ok-ink: #9be3b5; --warn-bg: #3a2a10; --warn-ink: #ffd28a;
+      --bad-bg: #3a1515; --bad-ink: #ffb3b3; --info-bg: #1f2633; --info-ink: #c9d5ec;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 40px 16px 56px; }
+  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .lede { color: var(--muted); margin: 0 0 28px; }
+  form { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .field { margin-bottom: 16px; }
+  .hint { color: var(--muted); font-size: 0.9rem; margin: 0 0 10px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  input, select { font: inherit; font-size: 1.1rem; padding: 10px 12px; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--muted); border-radius: 8px; }
+  select { width: 100%; }
+  input { flex: 1 1 180px; min-width: 0; }
+  button { font: inherit; font-weight: 600; padding: 10px 18px; border: 0; border-radius: 8px;
+    background: var(--ink); color: var(--bg); cursor: pointer; }
+  input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #result { margin-top: 20px; border-radius: 12px; padding: 0; }
+  #result:not(:empty) { padding: 16px 18px; border: 1px solid var(--line); transition: background-color .2s; }
+  #result h2 { font-size: 1.15rem; margin: 0 0 6px; }
+  #result p { margin: 6px 0 0; }
+  .s-ok { background: var(--ok-bg); color: var(--ok-ink); }
+  .s-soon { background: var(--warn-bg); color: var(--warn-ink); }
+  .s-ended { background: var(--bad-bg); color: var(--bad-ink); }
+  .s-info { background: var(--info-bg); color: var(--info-ink); }
+  section { margin-top: 36px; }
+  h2.sec { font-size: 1.1rem; margin: 0 0 6px; }
+  .small { color: var(--muted); font-size: 0.9rem; }
+  ul.small { padding-left: 20px; }
+  a { color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Is my runtime still supported?</h1>
+  <p class="lede">Pick a product, type the version you run, and see its end-of-life date as published by endoflife.date. It does not look at any website or server. It runs in your browser and sends nothing.</p>
+
+  <form id="check" novalidate>
+    <div class="field">
+      <label for="product">Product</label>
+      <select id="product" name="product"></select>
+    </div>
+    <label for="version">Version</label>
+    <p class="hint" id="version-hint">Example: 8.2.29, 3.10.12, 22.11.0. Type at least the branch (8.2, 3.10, 22); the full number also shows whether a newer release exists.</p>
+    <div class="row">
+      <input id="version" name="version" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+             aria-describedby="version-hint" placeholder="8.2.29">
+      <button type="submit">Check</button>
+    </div>
+  </form>
+  <div id="result" role="status" aria-live="polite"></div>
+
+  <section aria-labelledby="data-h">
+    <h2 class="sec" id="data-h">Data used</h2>
+    <p class="small">Data as of <strong id="asof"></strong>, copied from <a href="https://endoflife.date">endoflife.date</a> (MIT licence). Dates change when projects change their plans; open the source page for the current answer:</p>
+    <ul class="small" id="sources"></ul>
+  </section>
+
+  <section aria-labelledby="limits-h">
+    <h2 class="sec" id="limits-h">What this page does not do</h2>
+    <p class="small">It only compares the number you type with the dates in the data. Linux distributions and hosting companies can keep supporting a version after the upstream end-of-life date, and some vendors sell extended support; check with whoever supplies your copy. This is not security advice.</p>
+  </section>
+</main>
+<p style="max-width:42rem;margin:1.5rem auto;padding:0 1rem;font:0.95rem/1.5 system-ui,sans-serif;color:#3d4a63">Managing several client sites? <a href="https://samaanmohammed.gumroad.com/l/jrsghu">The Runtime End-of-Life Tracker Sheet</a> ($19) is an Excel sheet with end-of-life dates, days left and status per client, plus three client emails and a checklist. This page is free and makes no network calls; it only compares the number you type.</p>
+
+
+<script id="eol-data" type="application/json">{"fetched":"2026-10-22","source":"https://endoflife.date","products":{"php":{"label":"PHP","page":"https://endoflife.date/php","api":"https://endoflife.date/api/php.json","cycles":[{"cycle":"8.5","eol":"2029-12-31","latest":"8.5.12"},{"cycle":"8.4","eol":"2028-12-31","latest":"8.4.27"},{"cycle":"8.3","eol":"2027-12-31","latest":"8.3.36"},{"cycle":"8.2","eol":"2026-12-31","latest":"8.2.35"},{"cycle":"8.1","eol":"2025-12-31","latest":"8.1.34"},{"cycle":"8.0","eol":"2023-11-26","latest":"8.0.30"},{"cycle":"7.4","eol":"2022-11-28","latest":"7.4.33"},{"cycle":"7.3","eol":"2021-12-06","latest":"7.3.33"},{"cycle":"7.2","eol":"2020-11-30","latest":"7.2.34"},{"cycle":"7.1","eol":"2019-12-01","latest":"7.1.33"},{"cycle":"7.0","eol":"2019-01-10","latest":"7.0.33"},{"cycle":"5.6","eol":"2018-12-31","latest":"5.6.40"},{"cycle":"5.5","eol":"2016-07-21","latest":"5.5.38"},{"cycle":"5.4","eol":"2015-09-14","latest":"5.4.45"},{"cycle":"5.3","eol":"2014-08-14","latest":"5.3.29"},{"cycle":"5.2","eol":"2011-01-06","latest":"5.2.17"},{"cycle":"5.1","eol":"2006-08-24","latest":"5.1.6"},{"cycle":"5.0","eol":"2005-09-05","latest":"5.0.5"}]},"python":{"label":"Python","page":"https://endoflife.date/python","api":"https://endoflife.date/api/python.json","cycles":[{"cycle":"3.15","eol":"2031-10-31","latest":"3.15.1"},{"cycle":"3.14","eol":"2030-10-31","latest":"3.14.9"},{"cycle":"3.13","eol":"2029-10-31","latest":"3.13.17"},{"cycle":"3.12","eol":"2028-10-31","latest":"3.12.15"},{"cycle":"3.11","eol":"2027-10-31","latest":"3.11.17"},{"cycle":"3.10","eol":"2026-10-01","latest":"3.10.22"},{"cycle":"3.9","eol":"2025-10-31","latest":"3.9.25"},{"cycle":"3.8","eol":"2024-10-07","latest":"3.8.20"},{"cycle":"3.7","eol":"2023-06-27","latest":"3.7.17"},{"cycle":"3.6","eol":"2021-12-23","latest":"3.6.15"},{"cycle":"3.5","eol":"2020-09-30","latest":"3.5.10"},{"cycle":"3.4","eol":"2019-03-18","latest":"3.4.10"},{"cycle":"3.3","eol":"2017-09-29","latest":"3.3.7"},{"cycle":"3.2","eol":"2016-02-20","latest":"3.2.6"},{"cycle":"2.7","eol":"2020-01-01","latest":"2.7.18"},{"cycle":"3.1","eol":"2012-04-09","latest":"3.1.5"},{"cycle":"3.0","eol":"2009-06-27","latest":"3.0.1"},{"cycle":"2.6","eol":"2013-10-29","latest":"2.6.9"}]},"nodejs":{"label":"Node.js","page":"https://endoflife.date/nodejs","api":"https://endoflife.date/api/nodejs.json","cycles":[{"cycle":"26","eol":"2029-04-30","latest":"26.12.1"},{"cycle":"25","eol":"2026-06-01","latest":"25.9.0"},{"cycle":"24","eol":"2028-04-30","latest":"24.22.1"},{"cycle":"23","eol":"2025-06-01","latest":"23.11.1"},{"cycle":"22","eol":"2027-04-30","latest":"22.23.4"},{"cycle":"21","eol":"2024-06-01","latest":"21.7.3"},{"cycle":"20","eol":"2026-04-30","latest":"20.20.2"},{"cycle":"19","eol":"2023-06-01","latest":"19.9.0"},{"cycle":"18","eol":"2025-04-30","latest":"18.20.8"},{"cycle":"17","eol":"2022-06-01","latest":"17.9.1"},{"cycle":"16","eol":"2023-09-11","latest":"16.20.2"},{"cycle":"15","eol":"2021-06-01","latest":"15.14.0"},{"cycle":"14","eol":"2023-04-30","latest":"14.21.3"},{"cycle":"13","eol":"2020-06-01","latest":"13.14.0"},{"cycle":"12","eol":"2022-04-30","latest":"12.22.12"},{"cycle":"11","eol":"2019-06-30","latest":"11.15.0"},{"cycle":"10","eol":"2021-04-30","latest":"10.24.1"},{"cycle":"9","eol":"2018-06-30","latest":"9.11.2"},{"cycle":"8","eol":"2019-12-31","latest":"8.17.0"},{"cycle":"7","eol":"2017-06-30","latest":"7.10.1"},{"cycle":"6","eol":"2019-04-30","latest":"6.17.1"},{"cycle":"5","eol":"2016-06-30","latest":"5.12.0"},{"cycle":"4","eol":"2018-04-30","latest":"4.9.1"},{"cycle":"3","eol":true,"latest":"3.3.1"},{"cycle":"2","eol":true,"latest":"2.5.0"},{"cycle":"1","eol":true,"latest":"1.8.4"}]},"dotnet":{"label":".NET","page":"https://endoflife.date/dotnet","api":"https://endoflife.date/api/dotnet.json","cycles":[{"cycle":"10","eol":"2028-11-14","latest":"10.0.13"},{"cycle":"9","eol":"2026-11-10","latest":"9.0.21"},{"cycle":"8","eol":"2026-11-10","latest":"8.0.32"},{"cycle":"7","eol":"2024-05-14","latest":"7.0.20"},{"cycle":"6","eol":"2024-11-12","latest":"6.0.36"},{"cycle":"5","eol":"2022-05-10","latest":"5.0.17"},{"cycle":"3.1","eol":"2022-12-13","latest":"3.1.32"},{"cycle":"3.0","eol":"2020-03-03","latest":"3.0.3"},{"cycle":"2.2","eol":"2019-12-23","latest":"2.2.8"},{"cycle":"2.1","eol":"2021-08-21","latest":"2.1.30"},{"cycle":"2.0","eol":"2018-10-01","latest":"2.0.9"},{"cycle":"1.1","eol":"2019-06-27","latest":"1.1.13"},{"cycle":"1.0","eol":"2019-06-27","latest":"1.0.16"}]},"postgresql":{"label":"PostgreSQL","page":"https://endoflife.date/postgresql","api":"https://endoflife.date/api/postgresql.json","cycles":[{"cycle":"18","eol":"2030-11-14","latest":"18.6"},{"cycle":"17","eol":"2029-11-08","latest":"17.11"},{"cycle":"16","eol":"2028-11-09","latest":"16.15"},{"cycle":"15","eol":"2027-11-11","latest":"15.19"},{"cycle":"14","eol":"2026-11-12","latest":"14.24"},{"cycle":"13","eol":"2025-11-13","latest":"13.23"},{"cycle":"12","eol":"2024-11-21","latest":"12.22"},{"cycle":"11","eol":"2023-11-09","latest":"11.22"},{"cycle":"10","eol":"2022-11-10","latest":"10.23"},{"cycle":"9.6","eol":"2021-11-11","latest":"9.6.24"},{"cycle":"9.5","eol":"2021-02-11","latest":"9.5.25"},{"cycle":"9.4","eol":"2020-02-13","latest":"9.4.26"},{"cycle":"9.3","eol":"2018-11-08","latest":"9.3.25"},{"cycle":"9.2","eol":"2017-11-09","latest":"9.2.24"},{"cycle":"9.1","eol":"2016-10-27","latest":"9.1.24"},{"cycle":"9.0","eol":"2015-10-08","latest":"9.0.23"},{"cycle":"8.4","eol":"2014-07-24","latest":"8.4.22"},{"cycle":"8.3","eol":"2013-02-07","latest":"8.3.23"},{"cycle":"8.2","eol":"2011-12-05","latest":"8.2.23"},{"cycle":"8.1","eol":"2010-11-08","latest":"8.1.23"},{"cycle":"8.0","eol":"2010-10-01","latest":"8.0.26"},{"cycle":"7.4","eol":"2010-10-01","latest":"7.4.30"},{"cycle":"7.3","eol":"2007-11-27","latest":"7.3.21"},{"cycle":"7.2","eol":"2007-02-04","latest":"7.2.8"},{"cycle":"7.1","eol":"2006-04-13","latest":"7.1.3"},{"cycle":"7.0","eol":"2005-05-08","latest":"7.0.3"},{"cycle":"6.5","eol":"2004-06-09","latest":"6.5.3"},{"cycle":"6.4","eol":"2003-10-30","latest":"6.4.2"},{"cycle":"6.3","eol":"2003-03-01","latest":"6.3.2"}]},"mysql":{"label":"MySQL","page":"https://endoflife.date/mysql","api":"https://endoflife.date/api/mysql.json","cycles":[{"cycle":"26.7","eol":false,"latest":"26.7.0"},{"cycle":"9.7","eol":"2034-04-30","latest":"9.7.4"},{"cycle":"9.6","eol":"2026-04-21","latest":"9.6.1"},{"cycle":"9.5","eol":"2026-01-20","latest":"9.5.2"},{"cycle":"9.4","eol":"2025-10-21","latest":"9.4.2"},{"cycle":"9.3","eol":"2025-07-22","latest":"9.3.2"},{"cycle":"9.2","eol":"2025-04-15","latest":"9.2.2"},{"cycle":"9.1","eol":"2025-01-21","latest":"9.1.2"},{"cycle":"9.0","eol":"2024-10-15","latest":"9.0.1"},{"cycle":"8.4","eol":"2032-04-30","latest":"8.4.13"},{"cycle":"8.3","eol":"2024-04-30","latest":"8.3.0"},{"cycle":"8.2","eol":"2024-01-16","latest":"8.2.0"},{"cycle":"8.1","eol":"2023-10-25","latest":"8.1.0"},{"cycle":"8.0","eol":"2026-04-30","latest":"8.0.46"},{"cycle":"5.7","eol":"2023-10-31","latest":"5.7.44"},{"cycle":"5.6","eol":"2021-02-28","latest":"5.6.51"},{"cycle":"5.5","eol":"2018-12-31","latest":"5.5.63"}]},"wordpress":{"label":"WordPress","page":"https://endoflife.date/wordpress","api":"https://endoflife.date/api/wordpress.json","cycles":[{"cycle":"7.1","eol":false,"latest":"7.1.3"},{"cycle":"7.0","eol":false,"latest":"7.0.7"},{"cycle":"6.9","eol":false,"latest":"6.9.10"},{"cycle":"6.8","eol":false,"latest":"6.8.11"},{"cycle":"6.7","eol":false,"latest":"6.7.10"},{"cycle":"6.6","eol":false,"latest":"6.6.10"},{"cycle":"6.5","eol":false,"latest":"6.5.13"},{"cycle":"6.4","eol":false,"latest":"6.4.13"},{"cycle":"6.3","eol":false,"latest":"6.3.13"},{"cycle":"6.2","eol":false,"latest":"6.2.14"},{"cycle":"6.1","eol":false,"latest":"6.1.15"},{"cycle":"6.0","eol":false,"latest":"6.0.17"},{"cycle":"5.9","eol":false,"latest":"5.9.19"},{"cycle":"5.8","eol":false,"latest":"5.8.18"},{"cycle":"5.7","eol":false,"latest":"5.7.20"},{"cycle":"5.6","eol":false,"latest":"5.6.22"},{"cycle":"5.5","eol":false,"latest":"5.5.23"},{"cycle":"5.4","eol":false,"latest":"5.4.24"},{"cycle":"5.3","eol":false,"latest":"5.3.26"},{"cycle":"5.2","eol":false,"latest":"5.2.29"},{"cycle":"5.1","eol":false,"latest":"5.1.27"},{"cycle":"5.0","eol":false,"latest":"5.0.30"},{"cycle":"4.9","eol":false,"latest":"4.9.34"},{"cycle":"4.8","eol":false,"latest":"4.8.33"},{"cycle":"4.7","eol":false,"latest":"4.7.38"},{"cycle":"4.6","eol":"2025-07-31","latest":"4.6.30"},{"cycle":"4.5","eol":"2025-07-31","latest":"4.5.33"},{"cycle":"4.4","eol":"2025-07-31","latest":"4.4.34"},{"cycle":"4.3","eol":"2025-07-31","latest":"4.3.35"},{"cycle":"4.2","eol":"2025-07-31","latest":"4.2.39"},{"cycle":"4.1","eol":"2025-07-31","latest":"4.1.42"},{"cycle":"4.0","eol":"2022-12-01","latest":"4.0.38"},{"cycle":"3.9","eol":"2022-12-01","latest":"3.9.40"},{"cycle":"3.8","eol":"2022-12-01","latest":"3.8.41"},{"cycle":"3.7","eol":"2022-12-01","latest":"3.7.41"},{"cycle":"3.6","eol":"2013-10-24","latest":"3.6.1"},{"cycle":"3.5","eol":"2013-08-01","latest":"3.5.2"},{"cycle":"3.4","eol":"2012-12-11","latest":"3.4.2"},{"cycle":"3.3","eol":"2012-06-13","latest":"3.3.3"},{"cycle":"3.2","eol":"2011-12-12","latest":"3.2.1"},{"cycle":"3.1","eol":"2011-07-04","latest":"3.1.4"},{"cycle":"3.0","eol":"2011-02-23","latest":"3.0.6"},{"cycle":"2.9","eol":"2010-06-17","latest":"2.9.2"},{"cycle":"2.8","eol":"2009-12-18","latest":"2.8.6"},{"cycle":"2.7","eol":"2009-09-10","latest":"2.7.1"},{"cycle":"2.6","eol":"2008-12-10","latest":"2.6.5"},{"cycle":"2.5","eol":"2008-07-14","latest":"2.5.1"},{"cycle":"2.3","eol":"2008-03-29","latest":"2.3.3"},{"cycle":"2.2","eol":"2007-09-24","latest":"2.2.3"},{"cycle":"2.1","eol":"2007-09-24","latest":"2.1.3"},{"cycle":"2.0","eol":"2007-08-05","latest":"2.0.11"},{"cycle":"1.5","eol":"2005-12-26","latest":"1.5.2"},{"cycle":"1.2","eol":"2005-02-17","latest":"1.2.1"},{"cycle":"1.0","eol":"2004-05-22","latest":"1.0.2"},{"cycle":"0.72","eol":"2004-01-03","latest":"0.72"},{"cycle":"0.71","eol":"2003-10-11","latest":"0.711"}]}}}</script>
+<script id="version-logic">
+(function (root) {
+  "use strict";
+  var DAY = 86400000;
+  var SOON_DAYS = 90;
+
+  function daysBetween(fromISO, toISO) {
+    return Math.round((Date.parse(toISO + "T00:00:00Z") - Date.parse(fromISO + "T00:00:00Z")) / DAY);
+  }
+
+  function parts(v) { return v.split(".").map(Number); }
+
+  // Compares two number lists, padding the shorter with zeros. Returns <0, 0 or >0.
+  function cmpParts(a, b) {
+    for (var i = 0; i < Math.max(a.length, b.length); i++) {
+      var d = (a[i] || 0) - (b[i] || 0);
+      if (d !== 0) return d;
+    }
+    return 0;
+  }
+
+  // Strips "PHP ", "php", "node v", "Python ", a "(cli) ..." tail, a distro suffix such as "-1ubuntu1"
+  // and a pre-release tag such as "rc1", "a2", "b1", "alpha", "beta", "dev", "preview".
+  function normalise(input) {
+    var raw = String(input == null ? "" : input).trim()
+      .replace(/\s+\(.*$/, "").replace(/^[a-z][a-z .]*?\s*(?=v?\d)/i, "").replace(/^v(?=\d)/i, "");
+    var m = /^(\d{1,4}(?:\.\d{1,4}){0,3})([-+~_][0-9A-Za-z.+~_-]*|(?:rc|alpha|beta|dev|preview|a|b)[0-9A-Za-z.]*)?$/i.exec(raw);
+    return m ? { version: m[1], suffix: Boolean(m[2]) } : null;
+  }
+
+  // product: endoflife.date id. input: what the visitor typed. data: embedded JSON. todayISO: "YYYY-MM-DD".
+  function checkRuntime(product, input, data, todayISO) {
+    var p = Object.prototype.hasOwnProperty.call(data.products, product) ? data.products[product] : null;
+    if (!p) return { status: "unknown-product", product: product };
+    if (String(input == null ? "" : input).trim() === "") return { status: "invalid", reason: "empty" };
+    var n = normalise(input);
+    if (!n) return { status: "invalid", reason: "format" };
+    var v = parts(n.version);
+
+    var row = null;
+    p.cycles.forEach(function (c) {
+      var cp = parts(c.cycle);
+      if (cp.length > v.length) return;
+      for (var i = 0; i < cp.length; i++) if (cp[i] !== v[i]) return;
+      if (!row || cp.length > parts(row.cycle).length) row = c;
+    });
+    if (!row) {
+      // "8" for PHP: a longer branch starts with this number, so ask for MAJOR.MINOR.
+      var longer = p.cycles.filter(function (c) { var cp = parts(c.cycle); return cp.length > v.length && cp[0] === v[0]; });
+      if (v.length === 1 && longer.length) return { status: "incomplete", version: n.version, example: longer[0].cycle };
+      var newest = p.cycles.reduce(function (a, c) { return cmpParts(parts(c.cycle), parts(a.cycle)) > 0 ? c : a; });
+      var vb = v.slice(0, parts(newest.cycle).length);
+      if (cmpParts(vb, parts(newest.cycle)) > 0) return { status: "unknown-newer", version: n.version, newest: newest.cycle };
+      return { status: "unknown-branch", version: n.version };
+    }
+
+    var out = { version: n.version, branch: row.cycle, latest: row.latest, suffix: n.suffix };
+    // Patch comparison needs at least as many numbers as the latest release has.
+    if (v.length < parts(row.latest).length) out.patch = "incomplete";
+    else {
+      var c = cmpParts(v, parts(row.latest));
+      out.patch = c < 0 ? "newer-exists" : c === 0 ? "latest" : "newer-than-data";
+    }
+    if (row.eol === true) { out.status = "ended"; out.eol = null; return out; }
+    if (row.eol === false) { out.status = "no-date"; out.eol = null; return out; }
+    out.eol = row.eol;
+    out.daysLeft = daysBetween(todayISO, row.eol);
+    out.status = out.daysLeft < 0 ? "ended" : out.daysLeft <= SOON_DAYS ? "ends-soon" : "supported";
+    return out;
+  }
+
+  root.checkRuntime = checkRuntime;
+  root.daysBetween = daysBetween;
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<script>
+(function () {
+  "use strict";
+  var data = JSON.parse(document.getElementById("eol-data").textContent);
+  document.getElementById("asof").textContent = data.fetched;
+  var sel = document.getElementById("product"), list = document.getElementById("sources");
+  Object.keys(data.products).forEach(function (id) {
+    var p = data.products[id];
+    var o = document.createElement("option"); o.value = id; o.textContent = p.label; sel.appendChild(o);
+    var li = document.createElement("li"), a = document.createElement("a");
+    a.href = p.page; a.textContent = p.page.replace("https://", ""); li.appendChild(a);
+    li.appendChild(document.createTextNode(" (" + p.cycles.length + " branches)")); list.appendChild(li);
+  });
+
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function render(id, r) {
+    var p = data.products[id], box = document.getElementById("result");
+    var cls = "s-info", title = "", lines = [];
+    var name = p ? p.label : id;
+    if (r.status === "invalid") {
+      title = "That does not look like a version number";
+      lines.push("Type numbers separated by dots, for example " + p.cycles[0].latest + ".");
+    } else if (r.status === "incomplete") {
+      title = "Type at least MAJOR.MINOR, for example " + r.example;
+      lines.push(name + " branches have two numbers, so " + r.version + " alone does not name a branch.");
+    } else if (r.status === "unknown-product") {
+      title = "No data for this product";
+    } else if (r.status === "unknown-newer") {
+      title = name + " " + r.version + " is newer than our data";
+      lines.push("The newest " + name + " branch in our data (as of " + data.fetched + ") is " + r.newest + ". Check " + p.page + " for newer branches.");
+    } else if (r.status === "unknown-branch") {
+      title = name + " " + r.version + " is not a branch in our data";
+      lines.push("Check the number you typed, or see " + p.page + ".");
+    } else {
+      var b = name + " " + r.branch;
+      if (r.status === "ended") {
+        cls = "s-ended"; title = b + " has reached end of life";
+        lines.push(r.eol ? "End of life was " + r.eol + " (" + (-r.daysLeft) + " days ago)." : "endoflife.date lists this branch as ended without a date.");
+      } else if (r.status === "ends-soon") {
+        cls = "s-soon"; title = b + " ends on " + r.eol;
+        lines.push(r.daysLeft === 0 ? "That is today." : "That is " + r.daysLeft + " days from today.");
+      } else if (r.status === "no-date") {
+        title = b + ": no end-of-life date given";
+        lines.push("endoflife.date gives no end-of-life date for this branch.");
+      } else {
+        cls = "s-ok"; title = b + " is supported";
+        lines.push("End of life is " + r.eol + " (" + r.daysLeft + " days from today).");
+      }
+      if (id === "wordpress") { lines.push("endoflife.date says: \"The only officially actively maintained version of WordPress is the latest one.\""); lines.push("It also says: \"Security updates are backported to older releases when possible.\""); }
+      if (r.patch === "newer-exists") lines.push("A newer release of this branch exists: " + r.latest + ".");
+      else if (r.patch === "latest") lines.push(r.version + " is the latest release of this branch in our data.");
+      else if (r.patch === "newer-than-data") lines.push(r.version + " is newer than the latest release in our data (" + r.latest + "), so the data is out of date for this branch.");
+      else lines.push("Type the full version (for example " + r.latest + ") to see whether a newer release of this branch exists.");
+      if (r.suffix) lines.push("Your number has a distribution or build suffix; your supplier's own support dates can differ.");
+    }
+    box.className = cls;
+    box.innerHTML = "";
+    var h = document.createElement("h2"); h.textContent = title; box.appendChild(h);
+    lines.forEach(function (t) { var el = document.createElement("p"); el.textContent = t; box.appendChild(el); });
+  }
+
+  document.getElementById("check").addEventListener("submit", function (e) {
+    e.preventDefault();
+    render(sel.value, window.checkRuntime(sel.value, document.getElementById("version").value, data, today()));
+  });
+})();
+</script>
+</body>
+</html>
