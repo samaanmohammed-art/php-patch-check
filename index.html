@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is my PHP version patched?</title>
+<meta name="description" content="Type a PHP version number and compare it with the 21 October 2026 PHP security releases and the end-of-life dates. Runs in your browser, sends nothing.">
+<style>
+  :root {
+    --bg: #fbfbf9; --surface: #ffffff; --ink: #16181d; --muted: #4a4f5a; --line: #d9dbe0;
+    --accent: #1f4fd1; --ok-bg: #e7f5ec; --ok-ink: #0d5a2c; --warn-bg: #fff4e0; --warn-ink: #7a4300;
+    --bad-bg: #fde9e9; --bad-ink: #8a1414; --info-bg: #eef1f7; --info-ink: #23324d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121418; --surface: #1b1e24; --ink: #eceef2; --muted: #b3b8c3; --line: #343842;
+      --accent: #8fb0ff; --ok-bg: #11301e; --ok-ink: #9be3b5; --warn-bg: #3a2a10; --warn-ink: #ffd28a;
+      --bad-bg: #3a1515; --bad-ink: #ffb3b3; --info-bg: #1f2633; --info-ink: #c9d5ec;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 40px 16px 56px; }
+  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .lede { color: var(--muted); margin: 0 0 28px; }
+  form { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .hint { color: var(--muted); font-size: 0.9rem; margin: 0 0 10px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  input { flex: 1 1 180px; min-width: 0; font: inherit; font-size: 1.1rem; padding: 10px 12px; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--muted); border-radius: 8px; }
+  button { font: inherit; font-weight: 600; padding: 10px 18px; border: 0; border-radius: 8px;
+    background: var(--ink); color: var(--bg); cursor: pointer; }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #result { margin-top: 20px; border-radius: 12px; padding: 0; }
+  #result:not(:empty) { padding: 16px 18px; border: 1px solid var(--line); transition: background-color .2s; }
+  #result h2 { font-size: 1.15rem; margin: 0 0 6px; }
+  #result p { margin: 6px 0 0; }
+  .s-ok { background: var(--ok-bg); color: var(--ok-ink); }
+  .s-update { background: var(--warn-bg); color: var(--warn-ink); }
+  .s-eol { background: var(--bad-bg); color: var(--bad-ink); }
+  .s-info { background: var(--info-bg); color: var(--info-ink); }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; }
+  section { margin-top: 36px; }
+  h2.sec { font-size: 1.1rem; margin: 0 0 6px; }
+  .small { color: var(--muted); font-size: 0.9rem; }
+  a { color: var(--accent); }
+  .table-wrap { overflow-x: auto; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Is my PHP version patched?</h1>
+  <p class="lede">Type the PHP version number you see on your server. This page compares that number with the PHP security releases of 21&nbsp;October&nbsp;2026 and the end-of-life dates. It does not look at any website. It runs in your browser and sends nothing.</p>
+
+  <form id="check" novalidate>
+    <label for="version">PHP version</label>
+    <p class="hint" id="version-hint">Example: 8.3.31. Find it with <code>php -v</code> or in your hosting panel.</p>
+    <div class="row">
+      <input id="version" name="version" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+             aria-describedby="version-hint" placeholder="8.3.31">
+      <button type="submit">Check</button>
+    </div>
+  </form>
+  <div id="result" role="status" aria-live="polite"></div>
+
+  <section aria-labelledby="data-h">
+    <h2 class="sec" id="data-h">Data used</h2>
+    <p class="small">Data as of <strong id="asof"></strong>. Fixed releases for <span id="cves"></span>.</p>
+    <div class="table-wrap">
+      <table>
+        <caption class="small" style="text-align:left">Supported PHP branches</caption>
+        <thead><tr><th scope="col">Branch</th><th scope="col">Fixed in</th><th scope="col">End of life</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="small">PHP 8.1 and older: no official fixed release. Sources:
+      <a href="https://www.php.net/releases/">php.net releases</a>,
+      <a href="https://endoflife.date/php">endoflife.date/php</a>,
+      <a href="https://osv.dev/vulnerability/BIT-php-2026-109618">OSV record</a>.</p>
+  </section>
+
+  <section aria-labelledby="limits-h">
+    <h2 class="sec" id="limits-h">What this page does not do</h2>
+    <p class="small">It only compares the number you type. Linux distribution packages (Ubuntu, Debian, Red Hat and others) can include a security fix without changing the version number, so a lower number does not always mean the fix is missing: check your distribution's security notice. After an update, the running PHP process (PHP-FPM, Apache) has to be restarted before it uses the new version. This is not security advice.</p>
+  </section>
+</main>
+<p style="max-width:42rem;margin:1.5rem auto;padding:0 1rem;font:0.95rem/1.5 system-ui,sans-serif;color:#3d4a63">Managing several client sites? <a href="https://samaanmohammed.gumroad.com/l/xvsyxe">The PHP Patch and End-of-Life Kit</a> ($19) is a site list that flags unpatched versions, with three client emails and a host checklist. This page is free and makes no network calls; it only compares the number you type.</p>
+
+
+<script id="php-data" type="application/json">{"fetched":"2026-10-22","sources":{"releases":"https://www.php.net/releases/","eol":"https://endoflife.date/api/php.json","advisory_osv":"https://osv.dev/vulnerability/BIT-php-2026-109618"},"cves":["CVE-2026-109618","CVE-2026-109619"],"branches":[{"branch":"8.5","fixed":"8.5.12","latest":"8.5.12","latest_date":"21 Oct 2026","eol":"2029-12-31"},{"branch":"8.4","fixed":"8.4.27","latest":"8.4.27","latest_date":"21 Oct 2026","eol":"2028-12-31"},{"branch":"8.3","fixed":"8.3.36","latest":"8.3.36","latest_date":"21 Oct 2026","eol":"2027-12-31"},{"branch":"8.2","fixed":"8.2.35","latest":"8.2.35","latest_date":"21 Oct 2026","eol":"2026-12-31"}],"ended":[{"branch":"8.1","eol":"2025-12-31","latest":"8.1.34"},{"branch":"8.0","eol":"2023-11-26","latest":"8.0.30"},{"branch":"7.4","eol":"2022-11-28","latest":"7.4.33"},{"branch":"7.3","eol":"2021-12-06","latest":"7.3.33"},{"branch":"7.2","eol":"2020-11-30","latest":"7.2.34"},{"branch":"7.1","eol":"2019-12-01","latest":"7.1.33"},{"branch":"7.0","eol":"2019-01-10","latest":"7.0.33"},{"branch":"5.6","eol":"2018-12-31","latest":"5.6.40"},{"branch":"5.5","eol":"2016-07-21","latest":"5.5.38"},{"branch":"5.4","eol":"2015-09-14","latest":"5.4.45"},{"branch":"5.3","eol":"2014-08-14","latest":"5.3.29"},{"branch":"5.2","eol":"2011-01-06","latest":"5.2.17"},{"branch":"5.1","eol":"2006-08-24","latest":"5.1.6"},{"branch":"5.0","eol":"2005-09-05","latest":"5.0.5"}]}</script>
+<script id="version-logic">
+(function (root) {
+  "use strict";
+  var DAY = 86400000;
+
+  function daysBetween(fromISO, toISO) {
+    return Math.round((Date.parse(toISO + "T00:00:00Z") - Date.parse(fromISO + "T00:00:00Z")) / DAY);
+  }
+
+  function cmpBranch(a, b) {
+    var x = a.split(".").map(Number), y = b.split(".").map(Number);
+    return x[0] - y[0] || x[1] - y[1];
+  }
+
+  // input: what the visitor typed. data: the embedded JSON. todayISO: "YYYY-MM-DD".
+  function checkPhpVersion(input, data, todayISO) {
+    var raw = String(input == null ? "" : input).trim().replace(/^php\s*/i, "").replace(/^v/i, "")
+      .replace(/\s+\(.*$/, ""); // first line of `php -v`: "PHP 8.3.31 (cli) (built: ...)"
+    if (raw === "") return { status: "invalid", reason: "empty" };
+    var m = /^(\d{1,2})\.(\d{1,2})(?:\.(\d{1,3}))?([-+~][0-9A-Za-z.+~-]*)?$/.exec(raw);
+    if (!m) return { status: "invalid", reason: "format" };
+    var branch = Number(m[1]) + "." + Number(m[2]);
+    if (m[3] === undefined) return { status: "incomplete", branch: branch };
+    var patchNo = Number(m[3]);
+    var version = branch + "." + patchNo;
+    var distro = Boolean(m[4]);
+
+    var supported = data.branches.slice().sort(function (a, b) { return cmpBranch(a.branch, b.branch); });
+    var oldest = supported[0].branch, newest = supported[supported.length - 1].branch;
+    var row = null;
+    for (var i = 0; i < supported.length; i++) if (supported[i].branch === branch) row = supported[i];
+
+    if (row) {
+      var daysLeft = daysBetween(todayISO, row.eol);
+      if (daysLeft < 0) {
+        return { status: "eol", version: version, branch: branch, eol: row.eol, distro: distro, fixedExists: true };
+      }
+      var fixedPatch = Number(row.fixed.split(".")[2]);
+      var latestPatch = Number(row.latest.split(".")[2]);
+      if (patchNo >= fixedPatch) {
+        return { status: "patched", version: version, branch: branch, fixed: row.fixed, eol: row.eol,
+                 daysLeft: daysLeft, newerThanData: patchNo > latestPatch, distro: distro };
+      }
+      return { status: "update", version: version, branch: branch, fixed: row.fixed, eol: row.eol,
+               daysLeft: daysLeft, distro: distro };
+    }
+    if (cmpBranch(branch, oldest) < 0) {
+      var eolDate = null;
+      for (var j = 0; j < data.ended.length; j++) if (data.ended[j].branch === branch) eolDate = data.ended[j].eol;
+      if (eolDate === null) return { status: "invalid", reason: "unknown-branch", branch: branch };
+      return { status: "eol", version: version, branch: branch, eol: eolDate, distro: distro, fixedExists: false };
+    }
+    if (cmpBranch(branch, newest) > 0) return { status: "unknown-newer", version: version, branch: branch };
+    return { status: "invalid", reason: "branch" };
+  }
+
+  // Oldest branch still supported on todayISO, or null if every branch in the data has ended.
+  function oldestSupported(data, todayISO) {
+    var live = data.branches.filter(function (b) { return daysBetween(todayISO, b.eol) >= 0; })
+      .sort(function (a, b) { return cmpBranch(a.branch, b.branch); });
+    return live.length ? live[0] : null;
+  }
+
+  root.checkPhpVersion = checkPhpVersion;
+  root.oldestSupported = oldestSupported;
+  root.daysBetween = daysBetween;
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<script>
+(function () {
+  "use strict";
+  var data = JSON.parse(document.getElementById("php-data").textContent);
+  var asof = document.getElementById("asof");
+  asof.textContent = data.fetched;
+  document.getElementById("cves").textContent = data.cves.join(" and ");
+  var rows = document.getElementById("rows");
+  data.branches.forEach(function (b) {
+    var tr = document.createElement("tr");
+    [b.branch, b.fixed, b.eol].forEach(function (v) { var td = document.createElement("td"); td.textContent = v; tr.appendChild(td); });
+    rows.appendChild(tr);
+  });
+
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  var DISTRO = "Your number has a distribution suffix. Distribution packages can include the fix without changing the version number, so check your distribution's security notice for this package.";
+  var RESTART = "After any update, restart PHP-FPM or the web server so the new version is the one running.";
+
+  function render(r) {
+    var box = document.getElementById("result");
+    var cls = "s-info", title = "", lines = [];
+    if (r.status === "invalid" && r.reason === "unknown-branch") {
+      title = "PHP " + r.branch + " is not a branch in our data";
+      lines.push("Our data (as of " + data.fetched + ") has PHP branches 5.0 to " + data.branches.map(function (b) { return b.branch; }).sort().pop() + ". Check the number you typed.");
+    } else if (r.status === "invalid" || r.status === "incomplete") {
+      title = r.status === "incomplete" ? "Please type the full version, for example " + r.branch + ".0"
+        : "That does not look like a PHP version number";
+      lines.push(r.status === "incomplete"
+        ? "The last number (the patch number) decides whether the fix is included."
+        : "Type three numbers separated by dots, for example 8.3.31.");
+    } else if (r.status === "patched") {
+      cls = "s-ok"; title = "PHP " + r.version + " is at or above the fixed release " + r.fixed;
+      lines.push("Branch " + r.branch + " reaches end of life on " + r.eol + " (" + r.daysLeft + " days from today).");
+      if (r.newerThanData) lines.push("This number is newer than our data (" + data.fetched + "). Check php.net for anything released since.");
+      lines.push(RESTART);
+    } else if (r.status === "update") {
+      cls = "s-update"; title = "PHP " + r.version + " needs an update to " + r.fixed + " or later";
+      lines.push("PHP released " + r.fixed + " on 21 October 2026 with fixes for " + data.cves.join(" and ") + ".");
+      lines.push("Branch " + r.branch + " reaches end of life on " + r.eol + " (" + r.daysLeft + " days from today).");
+      if (r.distro) lines.push(DISTRO);
+      lines.push(RESTART);
+    } else if (r.status === "eol") {
+      cls = "s-eol"; title = "PHP " + r.branch + " has reached end of life";
+      lines.push((r.eol ? "Official support ended on " + r.eol + ". " : "") +
+        (r.fixedExists ? "" : "PHP did not publish an official fixed release for this branch on 21 October 2026. ") +
+        (function () {
+          var next = window.oldestSupported(data, today());
+          return next ? "Plan a move to a supported branch: " + next.branch + " or newer (" + next.branch +
+            " itself ends on " + next.eol + "; data as of " + data.fetched + ")."
+            : "Every branch in our data (as of " + data.fetched + ") has ended. Check php.net for current branches.";
+        })());
+      if (r.distro) lines.push(DISTRO);
+    } else {
+      title = "PHP " + r.branch + " is newer than our data";
+      lines.push("Our table (as of " + data.fetched + ") covers branches " + data.branches.map(function (b) { return b.branch; }).sort().join(", ") + ". Check php.net for this branch.");
+    }
+    box.className = cls;
+    box.innerHTML = "";
+    var h = document.createElement("h2"); h.textContent = title; box.appendChild(h);
+    lines.forEach(function (t) { var p = document.createElement("p"); p.textContent = t; box.appendChild(p); });
+  }
+
+  document.getElementById("check").addEventListener("submit", function (e) {
+    e.preventDefault();
+    render(window.checkPhpVersion(document.getElementById("version").value, data, today()));
+  });
+})();
+</script>
+</body>
+</html>
